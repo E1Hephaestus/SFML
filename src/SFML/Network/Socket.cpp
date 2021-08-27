@@ -41,12 +41,30 @@ m_isBlocking(true)
 
 }
 
+Socket::Socket(Socket &&other)noexcept
+{
+    *this = std::move(other);
+}
 
 ////////////////////////////////////////////////////////////
 Socket::~Socket()
 {
     // Close the socket before it gets destructed
     close();
+}
+
+Socket &Socket::operator=(Socket &&other)noexcept
+{
+    close();
+
+    m_type = other.m_type;
+    m_socket = other.m_socket;
+    m_isBlocking = other.m_isBlocking;
+
+    other.m_socket = priv::SocketImpl::invalidSocket();
+    other.m_isBlocking = false;
+
+    return *this;
 }
 
 

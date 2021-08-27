@@ -57,6 +57,18 @@ Socket(Tcp)
 
 }
 
+TcpSocket::TcpSocket(TcpSocket &&other)noexcept
+{
+    *this = std::move(other);
+}
+
+TcpSocket &TcpSocket::operator=(TcpSocket &&other)noexcept
+{
+    m_pendingPacket = std::move(other.m_pendingPacket);
+
+    return *this;
+}
+
 
 ////////////////////////////////////////////////////////////
 unsigned short TcpSocket::getLocalPort() const
