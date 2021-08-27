@@ -295,6 +295,18 @@ SFML_NETWORK_API std::ostream& operator <<(std::ostream& stream, const IpAddress
 
 } // namespace sf
 
+namespace std {
+
+    template <>
+    struct hash<sf::IpAddress>
+    {
+        std::size_t operator()(const sf::IpAddress& k) const
+        {
+            return hash<sf::Uint32>()(k.toInteger());
+        }
+    };
+
+}
 
 #endif // SFML_IPADDRESS_HPP
 
