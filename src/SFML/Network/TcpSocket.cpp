@@ -64,6 +64,8 @@ TcpSocket::TcpSocket(TcpSocket &&other)noexcept
 
 TcpSocket &TcpSocket::operator=(TcpSocket &&other)noexcept
 {
+    Socket::operator=(std::move(other));
+    
     m_pendingPacket = std::move(other.m_pendingPacket);
 
     return *this;
