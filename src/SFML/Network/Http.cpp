@@ -49,7 +49,7 @@ namespace
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-Http::Request::Request(const std::string& uri, Method method, const std::string& body)
+Http::Request::Request(const std::string& uri, HttpMethod method, const std::string& body)
 {
     setMethod(method);
     setUri(uri);
@@ -61,40 +61,40 @@ Http::Request::Request(const std::string& uri, Method method, const std::string&
 ////////////////////////////////////////////////////////////
 void Http::Request::setField(const std::string& field, const std::string& value)
 {
-    m_fields[toLower(field)] = value;
+    Fields[toLower(field)] = value;
 }
 
 
 ////////////////////////////////////////////////////////////
-void Http::Request::setMethod(Http::Request::Method method)
+void Http::Request::setMethod(Http::Request::HttpMethod method)
 {
-    m_method = method;
+    Method = method;
 }
 
 
 ////////////////////////////////////////////////////////////
 void Http::Request::setUri(const std::string& uri)
 {
-    m_uri = uri;
+    URI = uri;
 
     // Make sure it starts with a '/'
-    if (m_uri.empty() || (m_uri[0] != '/'))
-        m_uri.insert(0, "/");
+    if (URI.empty() || (URI[0] != '/'))
+        URI.insert(0, "/");
 }
 
 
 ////////////////////////////////////////////////////////////
 void Http::Request::setHttpVersion(unsigned int major, unsigned int minor)
 {
-    m_majorVersion = major;
-    m_minorVersion = minor;
+    MajorVersion = major;
+    MinorVersion = minor;
 }
 
 
 ////////////////////////////////////////////////////////////
 void Http::Request::setBody(const std::string& body)
 {
-    m_body = body;
+    Body = body;
 }
 
 
@@ -105,7 +105,7 @@ std::string Http::Request::prepare() const
 
     // Convert the method to its string representation
     std::string method;
-    switch (m_method)
+    switch (Method)
     {
         case Get:    method = "GET";    break;
         case Post:   method = "POST";   break;
@@ -115,11 +115,11 @@ std::string Http::Request::prepare() const
     }
 
     // Write the first line containing the request type
-    out << method << " " << m_uri << " ";
-    out << "HTTP/" << m_majorVersion << "." << m_minorVersion << "\r\n";
+    out << method << " " << URI << " ";
+    out << "HTTP/" << MajorVersion << "." << MinorVersion << "\r\n";
 
     // Write fields
-    for (FieldTable::const_iterator i = m_fields.begin(); i != m_fields.end(); ++i)
+    for (FieldTable::const_iterator i = Fields.begin(); i != Fields.end(); ++i)
     {
         out << i->first << ": " << i->second << "\r\n";
     }
@@ -128,7 +128,7 @@ std::string Http::Request::prepare() const
     out << "\r\n";
 
     // Add the body
-    out << m_body;
+    out << Body;
 
     return out.str();
 }
@@ -137,15 +137,15 @@ std::string Http::Request::prepare() const
 ////////////////////////////////////////////////////////////
 bool Http::Request::hasField(const std::string& field) const
 {
-    return m_fields.find(toLower(field)) != m_fields.end();
+    return Fields.find(toLower(field)) != Fields.end();
 }
 
 
 ////////////////////////////////////////////////////////////
 Http::Response::Response() :
-m_status      (ConnectionFailed),
-m_majorVersion(0),
-m_minorVersion(0)
+    Status      (ConnectionFailed),
+    MajorVersion(0),
+    MinorVersion(0)
 {
 
 }
@@ -154,8 +154,8 @@ m_minorVersion(0)
 ////////////////////////////////////////////////////////////
 const std::string& Http::Response::getField(const std::string& field) const
 {
-    FieldTable::const_iterator it = m_fields.find(toLower(field));
-    if (it != m_fields.end())
+    FieldTable::const_iterator it = Fields.find(toLower(field));
+    if (it != Fields.end())
     {
         return it->second;
     }
@@ -168,30 +168,30 @@ const std::string& Http::Response::getField(const std::string& field) const
 
 
 ////////////////////////////////////////////////////////////
-Http::Response::Status Http::Response::getStatus() const
+Http::Response::HttpStatus Http::Response::getStatus() const
 {
-    return m_status;
+    return Status;
 }
 
 
 ////////////////////////////////////////////////////////////
 unsigned int Http::Response::getMajorHttpVersion() const
 {
-    return m_majorVersion;
+    return MajorVersion;
 }
 
 
 ////////////////////////////////////////////////////////////
 unsigned int Http::Response::getMinorHttpVersion() const
 {
-    return m_minorVersion;
+    return MinorVersion;
 }
 
 
 ////////////////////////////////////////////////////////////
 const std::string& Http::Response::getBody() const
 {
-    return m_body;
+    return Body;
 }
 
 
@@ -208,13 +208,13 @@ void Http::Response::parse(const std::string& data)
             (toLower(version.substr(0, 5)) == "http/")   &&
              isdigit(version[5]) && isdigit(version[7]))
         {
-            m_majorVersion = version[5] - '0';
-            m_minorVersion = version[7] - '0';
+            MajorVersion = version[5] - '0';
+            MinorVersion = version[7] - '0';
         }
         else
         {
             // Invalid HTTP version
-            m_status = InvalidResponse;
+            Status = InvalidResponse;
             return;
         }
     }
@@ -223,12 +223,12 @@ void Http::Response::parse(const std::string& data)
     int status;
     if (in >> status)
     {
-        m_status = static_cast<Status>(status);
+        Status = static_cast<HttpStatus>(status);
     }
     else
     {
         // Invalid status code
-        m_status = InvalidResponse;
+        Status = InvalidResponse;
         return;
     }
 
@@ -238,13 +238,13 @@ void Http::Response::parse(const std::string& data)
     // Parse the other lines, which contain fields, one by one
     parseFields(in);
 
-    m_body.clear();
+    Body.clear();
 
     // Determine whether the transfer is chunked
     if (toLower(getField("transfer-encoding")) != "chunked")
     {
         // Not chunked - just read everything at once
-        std::copy(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>(), std::back_inserter(m_body));
+        std::copy(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>(), std::back_inserter(Body));
     }
     else
     {
@@ -261,7 +261,7 @@ void Http::Response::parse(const std::string& data)
             std::istreambuf_iterator<char> it(in);
             std::istreambuf_iterator<char> itEnd;
             for (std::size_t i = 0; ((i < length) && (it != itEnd)); i++)
-                m_body.push_back(*it++);
+                Body.push_back(*it++);
         }
 
         // Drop the rest of the line (chunk-extension)
@@ -291,7 +291,7 @@ void Http::Response::parseFields(std::istream &in)
                 value.erase(value.size() - 1);
 
             // Add the field
-            m_fields[toLower(field)] = value;
+            Fields[toLower(field)] = value;
         }
     }
 }
@@ -365,14 +365,14 @@ Http::Response Http::sendRequest(const Http::Request& request, Time timeout)
     if (!toSend.hasField("Content-Length"))
     {
         std::ostringstream out;
-        out << toSend.m_body.size();
+        out << toSend.Body.size();
         toSend.setField("Content-Length", out.str());
     }
-    if ((toSend.m_method == Request::Post) && !toSend.hasField("Content-Type"))
+    if ((toSend.Method == Request::Post) && !toSend.hasField("Content-Type"))
     {
         toSend.setField("Content-Type", "application/x-www-form-urlencoded");
     }
-    if ((toSend.m_majorVersion * 10 + toSend.m_minorVersion >= 11) && !toSend.hasField("Connection"))
+    if ((toSend.MajorVersion * 10 + toSend.MinorVersion >= 11) && !toSend.hasField("Connection"))
     {
         toSend.setField("Connection", "close");
     }

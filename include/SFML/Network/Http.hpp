@@ -51,15 +51,13 @@ public:
     /// \brief Define a HTTP request
     ///
     ////////////////////////////////////////////////////////////
-    class SFML_NETWORK_API Request
+    struct SFML_NETWORK_API Request
     {
-    public:
-
         ////////////////////////////////////////////////////////////
         /// \brief Enumerate the available HTTP methods for a request
         ///
         ////////////////////////////////////////////////////////////
-        enum Method
+        enum HttpMethod
         {
             Get,   //!< Request in get mode, standard method to retrieve a page
             Post,  //!< Request in post mode, usually to send data to a page
@@ -79,7 +77,7 @@ public:
         /// \param body   Content of the request's body
         ///
         ////////////////////////////////////////////////////////////
-        Request(const std::string& uri = "/", Method method = Get, const std::string& body = "");
+        Request(const std::string& uri = "/", HttpMethod method = Get, const std::string& body = "");
 
         ////////////////////////////////////////////////////////////
         /// \brief Set the value of a field
@@ -106,7 +104,7 @@ public:
         /// \param method Method to use for the request
         ///
         ////////////////////////////////////////////////////////////
-        void setMethod(Method method);
+        void setMethod(HttpMethod method);
 
         ////////////////////////////////////////////////////////////
         /// \brief Set the requested URI
@@ -143,10 +141,6 @@ public:
         ////////////////////////////////////////////////////////////
         void setBody(const std::string& body);
 
-    private:
-
-        friend class Http;
-
         ////////////////////////////////////////////////////////////
         /// \brief Prepare the final request to send to the server
         ///
@@ -178,27 +172,25 @@ public:
         ////////////////////////////////////////////////////////////
         // Member data
         ////////////////////////////////////////////////////////////
-        FieldTable   m_fields;       //!< Fields of the header associated to their value
-        Method       m_method;       //!< Method to use for the request
-        std::string  m_uri;          //!< Target URI of the request
-        unsigned int m_majorVersion; //!< Major HTTP version
-        unsigned int m_minorVersion; //!< Minor HTTP version
-        std::string  m_body;         //!< Body of the request
+        FieldTable   Fields;       //!< Fields of the header associated to their value
+        HttpMethod   Method;       //!< Method to use for the request
+        std::string  URI;          //!< Target URI of the request
+        unsigned int MajorVersion; //!< Major HTTP version
+        unsigned int MinorVersion; //!< Minor HTTP version
+        std::string  Body;         //!< Body of the request
     };
 
     ////////////////////////////////////////////////////////////
     /// \brief Define a HTTP response
     ///
     ////////////////////////////////////////////////////////////
-    class SFML_NETWORK_API Response
+    struct SFML_NETWORK_API Response
     {
-    public:
-
         ////////////////////////////////////////////////////////////
         /// \brief Enumerate all the valid status codes for a response
         ///
         ////////////////////////////////////////////////////////////
-        enum Status
+        enum HttpStatus
         {
             // 2xx: success
             Ok             = 200, //!< Most common code returned when operation was successful
@@ -267,7 +259,7 @@ public:
         /// \return Status code of the response
         ///
         ////////////////////////////////////////////////////////////
-        Status getStatus() const;
+        HttpStatus getStatus() const;
 
         ////////////////////////////////////////////////////////////
         /// \brief Get the major HTTP version number of the response
@@ -303,10 +295,6 @@ public:
         ////////////////////////////////////////////////////////////
         const std::string& getBody() const;
 
-    private:
-
-        friend class Http;
-
         ////////////////////////////////////////////////////////////
         /// \brief Construct the header from a response string
         ///
@@ -338,11 +326,11 @@ public:
         ////////////////////////////////////////////////////////////
         // Member data
         ////////////////////////////////////////////////////////////
-        FieldTable   m_fields;       //!< Fields of the header
-        Status       m_status;       //!< Status code
-        unsigned int m_majorVersion; //!< Major HTTP version
-        unsigned int m_minorVersion; //!< Minor HTTP version
-        std::string  m_body;         //!< Body of the response
+        FieldTable   Fields;       //!< Fields of the header
+        HttpStatus   Status;       //!< Status code
+        unsigned int MajorVersion; //!< Major HTTP version
+        unsigned int MinorVersion; //!< Minor HTTP version
+        std::string  Body;         //!< Body of the response
     };
 
     ////////////////////////////////////////////////////////////
